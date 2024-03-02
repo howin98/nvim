@@ -1,56 +1,47 @@
 local vim = vim
 
-vim.o.clipboard = vim.o.clipboard .. 'unnamedplus'
-
 if vim.g.vscode then
-  vsc = require('vscode-neovim')
+  local vsc = require('vscode-neovim')
 
-  vim.keymap.set('n', '/', function() vsc.action('actions.find') end)
-  vim.keymap.set('v', '/', function()
-    vsc.call('actions.find')
-    vsc.action('toggleFindInSelection')
-  end)
+  vim.o.clipboard = vim.o.clipboard .. 'unnamedplus'
+  vim.o.ignorecase = true
+  vim.o.smartcase = true
 
-  vim.keymap.set('n', 'gd', function() vsc.action('editor.action.revealDefinition') end)
-  vim.keymap.set('n', 'gr', function() vsc.action('editor.action.goToReferences') end)
-  vim.keymap.set('n', 'gR', function() vsc.action('references-view.findReferences') end)
+  local function set_shortcut(mode, shortcut, actions)
+    local mode_set = {}
+    for i = 1, #mode do
+      table.insert(mode_set, mode:sub(i, i))
+    end
 
-  vim.keymap.set({ 'n', 'v' }, 'g:', function() vsc.action('inlineChat.start') end)
-  vim.keymap.set({ 'n', 'v' }, 'g;e', function() vsc.action('github.copilot.interactiveEditor.explain') end)
-  vim.keymap.set({ 'n', 'v' }, 'g;d', function() vsc.action('github.copilot.interactiveEditor.generateDocs') end)
+    vim.keymap.set(mode_set, shortcut,
+      function()
+        for i, val in ipairs(actions) do
+          if i == #actions then vsc.action(val) else vsc.call(val) end
+        end
+      end)
+  end
 
-  vim.keymap.set('n', 'gB', function() vsc.action('bookmarks.toggleLabeled') end)
-  vim.keymap.set('n', 'gbb', function() vsc.action('bookmarks.toggle') end)
-  vim.keymap.set('n', 'gbl', function() vsc.action('bookmarks.listFromAllFiles') end)
-  vim.keymap.set('n', 'gbj', function() vsc.action('bookmarks.jumpToNext') end)
-  vim.keymap.set('n', 'gbk', function() vsc.action('bookmarks.jumpToPrevious') end)
-
-  vim.keymap.set('n', 'gF', function() vsc.action('editor.action.formatDocument') end)
-  vim.keymap.set('n', 'gf', function() vsc.action('editor.action.formatChanges') end)
-  vim.keymap.set('v', 'gf', function() vsc.action('editor.action.formatSelection') end)
-  vim.keymap.set('n', 'g/', function() vsc.action('workbench.action.quickOpen') end)
-  vim.keymap.set('n', 'gt', function() vsc.action('workbench.action.quickOpenLeastRecentlyUsedEditor') end)
-
+  set_shortcut('n', '/', { 'actions.find' })
+  set_shortcut('v', '/', { 'actions.find', 'toggleFindInSelection' })
+  set_shortcut('nv', 'gd', { 'editor.action.revealDefinition' })
+  set_shortcut('nv', 'gr', { 'editor.action.goToReferences' })
+  set_shortcut('nv', 'gR', { 'references-view.findReferences' })
+  set_shortcut('nv', 'g:', { 'inlineChat.start' })
+  set_shortcut('nv', 'gb', { 'bookmarks.toggle' })
+  set_shortcut('nv', 'gB', { 'bookmarks.listFromAllFiles' })
+  set_shortcut('nv', 'ge', { 'workbench.action.showAllEditors' })
+  set_shortcut('nv', 'gF', { 'editor.action.formatDocument' })
+  set_shortcut('n', 'gf', { 'editor.action.formatChanges' })
+  set_shortcut('v', 'gf', { 'editor.action.formatSelection' })
+  set_shortcut('nv', 'sh', { 'workbench.action.splitEditorLeft', 'workbench.action.quickOpen' })
+  set_shortcut('nv', 'sj', { 'workbench.action.splitEditorDown', 'workbench.action.quickOpen' })
+  set_shortcut('nv', 'sk', { 'workbench.action.splitEditorUp', 'workbench.action.quickOpen' })
+  set_shortcut('nv', 'sl', { 'workbench.action.splitEditorRight', 'workbench.action.quickOpen' })
+  set_shortcut('nvi', '<C-h>', { 'workbench.action.focusLeftGroup' })
+  set_shortcut('nvi', '<C-j>', { 'workbench.action.focusBelowGroup' })
+  set_shortcut('nvi', '<C-k>', { 'workbench.action.focusAboveGroup' })
+  set_shortcut('nvi', '<C-l>', { 'workbench.action.focusRightGroup' })
   vim.api.nvim_set_keymap('n', 's', '', { noremap = true })
-  vim.keymap.set('n', 'sh', function() vsc.action('workbench.action.splitEditorLeft') end)
-  vim.keymap.set('n', 'sj', function() vsc.action('workbench.action.splitEditorDown') end)
-  vim.keymap.set('n', 'sk', function() vsc.action('workbench.action.splitEditorUp') end)
-  vim.keymap.set('n', 'sl', function() vsc.action('workbench.action.splitEditorRight') end)
-
-  vim.keymap.set({ 'n', 'v', 'i' }, '<C-h>', function()
-    vsc.call('workbench.action.focusLeftGroup')
-    vsc.action('center-cursor.setCursor')
-  end)
-  vim.keymap.set({ 'n', 'v', 'i' }, '<C-j>', function()
-    vsc.call('workbench.action.focusBelowGroup')
-    vsc.action('center-cursor.setCursor')
-  end)
-  vim.keymap.set({ 'n', 'v', 'i' }, '<C-k>', function()
-    vsc.call('workbench.action.focusAboveGroup')
-    vsc.action('center-cursor.setCursor')
-  end)
-  vim.keymap.set({ 'n', 'v', 'i' }, '<C-l>', function()
-    vsc.call('workbench.action.focusRightGroup')
-    vsc.action('center-cursor.setCursor')
-  end)
+  vim.api.nvim_set_keymap('x', '>', '>gv', { noremap = true })
+  vim.api.nvim_set_keymap('x', '<', '<gv', { noremap = true })
 end
